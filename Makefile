@@ -2,7 +2,7 @@ all: report.md
 	@if ! type "pandoc" >/dev/null; then\
 		make install; \
 	fi
-	pandoc --toc -s report.md -o report.pdf
+	./pp report.md | pandoc --toc -f markdown -o report.pdf 
 	@if type "evince" >/dev/null; then\
 		evince report.pdf & \
 	else\
@@ -10,4 +10,4 @@ all: report.md
 	fi
 
 install: 
-	sudo apt install pandoc
+	sudo apt install pandoc graphviz librsvg2-bin
