@@ -27,7 +27,7 @@ digraph {
 ~~~~~
 
 ## Setup for Jenkins:
-The first tool to setup is Jenkins. This tool is used in creating the continuous integration and continuous deployment of pipeline. To install Jenkins on your system use jenkinsci/blueocean docker image for jenkins installation. For this docker should be installed previously in the system. 
+The first tool to setup is Jenkins. This tool is used in creating the continuous integration and continuous deployment of pipeline. To install Jenkins on your system use jenkinsci/blueocean docker image. For this [docker](https://docs.docker.com/install/) should be installed previously in the system. Do not directly copy paste the command it may not work, remove "\" and put in single line. 
 ```sh
 $ docker run \
   --rm \
@@ -41,6 +41,8 @@ $ docker run \
 The above method is for linux users for Windows and Mac users follow this [link](https://jenkins.io/doc/tutorials/build-a-node-js-and-react-app-with-npm/#run-jenkins-in-docker). The below pipeline is made on the blueocean jenkins container.
 
 ![DevOps Pipeline](build_testing.png)
+
+One Jenkins is installed we will understand the various steps which are there in the Jenkins pipeline. These steps will same to all except configuration may differ. 
 
 ## SCM
 SCM stands for source code management and used for managing the source code of the application. For this project source code is stored in a git repository hosted on GitHub at
