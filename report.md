@@ -8,11 +8,14 @@ geometry: margin=0.8in
 date: May 11, 2018
 ---
 
+---------------------------------
+
 # Executive Summary
 
 # Software Development LifeCycle
+
 !dot(imagename)(Software Development Life Cycle)
-~~~~~ 
+~~~~~
 digraph {
   rankdir=LR;
   "SCM" -> "Build";
@@ -21,7 +24,6 @@ digraph {
   "Artifact" -> Deployment;
   Deployment -> Monitoring;
 }
-
 ~~~~~
 
 ![DevOps Pipeline](build_testing.png)
@@ -33,7 +35,87 @@ The code is stored in a git repository hosted on GitHub at
 
 ## Build
 
+Gratia is a Ruby on Rails project, configured to be deployed as a Docker
+container. We use the following `Dockerfile` to setup the Gratia docker image:
+
+```dockerfile
+FROM ruby:2.4-alpine
+
+RUN apk --update add --virtual\
+  build-dependencies build-base libev libev-dev postgresql-dev nodejs bash\
+  tzdata sqlite-dev git curl 
+
+# for yarn
+RUN npm install -g yarn 
+WORKDIR /app
+ADD .gemrc /app
+ADD Gemfile /app/
+ADD Gemfile.lock /app/
+
+ENV RAILS_ENV=development
+ENV NODE_ENV=development
+
+RUN bundle install --jobs 8
+
+ADD package.json /app/
+
+RUN yarn install
+
+ADD . /app
+
+EXPOSE 3000
+CMD ["bundle", "exec", "rails", "s"]
+```
+
+
+Addtionally, we run a few other services along with Gratia on which it is
+dependent. This is managed through Docker Compose using the following
+`docker-compose.yml` configuration file:
+
+```docker-compose
+version: '3'
+services:
+  web:
+    build: .
+    image: arkokoley/gratia
+    dns: "8.8.8.8"  # DO NOT REMOVE. Removing this breaks dns in the containers
+    env_file: .env
+    links:
+      - db:db
+      - solr:solr
+    command: bash -c "bin/rake assets:precompile && bin/rake db:create && bin/rake db:migrate && bin/rails s"
+
+  # In production remove this and add an external link in web
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=thanks123
+    volumes:
+      - ./database:/var/lib/postgresql
+  solr:
+    image: solr:7.0.1
+    volumes:
+      - data:/opt/solr/server/solr/mycores
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - development
+    links:
+      - db:db
+volumes:
+  data: {}
+```
+
 ## Testing
+
+For Gratia, we use [Rspec](http://rspec.info/) to do Behavioural Testing. We
+wrote a total of 54 test cases covering various behaviours of the different
+models of Gratia. Of these 54, 6 were pending fixes and the other 48 test cases
+were passed. 
+
+To run the rests, we utilise a seperate docker-compose configuration file
+(`docker-compose-test.yml`) which contains the right environment configuration for the testing environment.  
+![Testing Results](testing.png)
 
 ## Artifact 
 
@@ -135,10 +217,16 @@ This is done by following the given steps:
 
 Optionally, repeat step 2 for other environments that may need logging.
 
+### Configuring Kibana Dashboard
+
+
+
 # Results and Discussion
 
 # Future Work
 
 # Conclusion
+
+
 
 # References
