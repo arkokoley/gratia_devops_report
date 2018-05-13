@@ -11,7 +11,7 @@ date: May 11, 2018
 ---------------------------------
 
 # Executive Summary
-
+Creating a Software Development LifeCycle using various tools for DevOps such as Jenkins, Rundeck and ELK stack. 
 # Software Development LifeCycle
 
 !dot(imagename)(Software Development Life Cycle)
@@ -26,17 +26,29 @@ digraph {
 }
 ~~~~~
 
+## Setup for Jenkins:
+The first tool to setup is Jenkins. This tool is used in creating the continuous integration and continuous deployment of pipeline. To install Jenkins on your system use jenkinsci/blueocean docker image for jenkins installation. For this docker should be installed previously in the system. 
+```sh
+$ docker run \
+  --rm \
+  -u root \
+  -p 8080:8080 \
+  -v jenkins-data:/var/jenkins_home \ 
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$HOME":/home \ 
+  jenkinsci/blueocean
+```
+The above method is for linux users for Windows and Mac users follow this [link](https://jenkins.io/doc/tutorials/build-a-node-js-and-react-app-with-npm/#run-jenkins-in-docker). The below pipeline is made on the blueocean jenkins container.
+
 ![DevOps Pipeline](build_testing.png)
 
 ## SCM
-
-The code is stored in a git repository hosted on GitHub at
+SCM stands for source code management and used for managing the source code of the application. For this project source code is stored in a git repository hosted on GitHub at
 [arkokoley/gratia](https://github.com/arkokoley/gratia).
 
 ## Build
 
-Gratia is a Ruby on Rails project, configured to be deployed as a Docker
-container. We use the following `Dockerfile` to setup the Gratia docker image:
+Gratia is a Ruby on Rails project, configured to be deployed as a Docker container. We use the following `Dockerfile` to setup the Gratia docker image. For your project configuration may vary. But if you are deploying a rails application more or less it would be the same.
 
 ```dockerfile
 FROM ruby:2.4-alpine
@@ -69,7 +81,7 @@ CMD ["bundle", "exec", "rails", "s"]
 
 Addtionally, we run a few other services along with Gratia on which it is
 dependent. This is managed through Docker Compose using the following
-`docker-compose.yml` configuration file:
+`docker-compose.yml` configuration file. In case you are not using any other service like Solar, Mysql etc. then there is no need to setup this.
 
 ```yaml
 version: '3'
@@ -113,10 +125,10 @@ volumes:
 For Gratia, we use [Rspec](http://rspec.info/) to do Behavioural Testing. We
 wrote a total of 54 test cases covering various behaviours of the different
 models of Gratia. Of these 54, 6 were pending fixes and the other 48 test cases
-were passed. 
+were passed. If you are using rails application Rspec is a great tool for you. 
 
-To run the rests, we utilise a seperate docker-compose configuration file
-(`docker-compose-test.yml`) which contains the right environment configuration for the testing environment.  
+To run the rests, we utilise a separate docker-compose configuration file
+(`docker-compose-test.yml`) which contains the right environment configuration for the testing environment. Or you can directly use Rspec command if your application does not depend on various services.
 ![Testing Results](testing.png)
 
 ## Artifact 
@@ -144,6 +156,47 @@ docker pull arkokoley/gratia
 
 # Build new container
 docker-compose up -d
+```
+### Jenkins file for the complete CD:
+The below file is the complete Jenkins file of the above CD. There are various stages and each stage has steps. 
+
+```sh
+pipeline {
+  agent any
+  stages {
+    stage('Build Image') {
+      steps {
+        writeFile(file: '.env', text: 'DB_USERNAME=postgres DB_PASSWORD=thanks123 RAILS_ENV=test NODE_ENV=test')
+        sh 'docker-compose -f docker-compose-test.yml build'
+      }
+    }
+    stage('Test') {
+      steps {
+        sh 'docker-compose -f docker-compose-test.yml run -e RAILS_ENV=test web bundle exec rspec'
+      }
+    }
+    stage('Pushing to docker hub') {
+      steps {
+        sh 'docker login -u=arkokoley -p=<password>'
+        sh 'docker-compose -f docker-compose-test.yml push'
+      }
+    }
+    stage('Deploying - Rundeck') {
+      steps {
+        build 'rundeck_deploy'
+      }
+    }
+  }
+  post {
+    always {
+      echo 'I will always say Hello!'
+    }
+    
+  }
+  triggers {
+    pollSCM('* * * * *')
+  }
+}
 ```
 
 ## Monitoring
