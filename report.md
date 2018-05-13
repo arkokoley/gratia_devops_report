@@ -67,12 +67,11 @@ EXPOSE 3000
 CMD ["bundle", "exec", "rails", "s"]
 ```
 
-
 Addtionally, we run a few other services along with Gratia on which it is
 dependent. This is managed through Docker Compose using the following
 `docker-compose.yml` configuration file:
 
-```docker-compose
+```yaml
 version: '3'
 services:
   web:
@@ -83,7 +82,10 @@ services:
     links:
       - db:db
       - solr:solr
-    command: bash -c "bin/rake assets:precompile && bin/rake db:create && bin/rake db:migrate && bin/rails s"
+      command: bash -c "bin/rake assets:precompile && \
+                        bin/rake db:create && \
+                        bin/rake db:migrate && \
+                        bin/rails s"
 
   # In production remove this and add an external link in web
   db:
