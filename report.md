@@ -280,11 +280,10 @@ Optionally, repeat step 2 for other environments that may need logging.
 
 
 # Results and Discussion
+Once the docker container image was deployed on Docker hub it was taking just 2 mins to complete the complete cycle. For the first time complete docker image is deployed on Docker hub but for further deployement it just deploys the diff.
 
 # Future Work
+To create a generic pipeline for various type of applications which can directly be used by the open source project and they do not need to configure it again and again. 
 
 # Conclusion
-
-
-
-# References
+This SDLC helped us in understanding various steps which happens in during development to deployment. 
