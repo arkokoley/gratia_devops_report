@@ -11,7 +11,8 @@ date: May 11, 2018
 ---------------------------------
 
 # Executive Summary
-Creating a Software Development LifeCycle using various tools for DevOps such as Jenkins, Rundeck and ELK stack. 
+Creating a Software Development LifeCycle(SDLC) using various tools for DevOps such as Jenkins, Rundeck and ELK stack. These tools are open source tools and can be used in any type of application SDLC.
+
 # Software Development LifeCycle
 
 !dot(imagename)(Software Development Life Cycle)
